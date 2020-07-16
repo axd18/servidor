@@ -61,3 +61,73 @@ exports.obtenerTareas = async (req, res) => {
         res.status(500).send('Hubo un error');
     }
 }
+
+// Actualizar una tarea
+exports.actualizarTarea = async (req, res) => {
+    try {
+        // Extraer el proyecto y comprobar si existe
+        const  { proyecto, nombre, estado } = req.body;
+        
+        // Si la tarea existe o no
+        let tarea = await Proyecto.findById(req.params.id);
+        if(!tarea) {
+            return res.status(404).json({msg: 'No existe esa tarea'});
+        }
+        
+        // Extraer proyecto
+        const existeProyecto = await Proyecto.findById(proyecto);
+        
+
+        // Revisar si el proyecto actual pertenece al usuario autenticado
+        if(existeProyecto.creador.toString() !== req.usuario.id ) {
+            return res.status(401).json({msg: 'No autorizado'});
+        }
+
+        // Crear un objeto con la nueva información
+        const nuevaTarea = {};
+
+        if(nombre) nuevaTarea.nombre = nombre;
+        if(estado) nuevaTarea.estado = estado;
+
+        // Guardar la tarea
+        tarea = await Tarea.findByIdAndUpdate({_id : req.params.id}, nuevaTarea, { new: true });
+        req.json({ tarea })
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).send('Hubo un error');
+    }
+}
+
+
+// Eliminar una tarea
+exports.eliminarTarea = async (req, res) => {
+    try {
+        // Extraer el proyecto y comprobar si existe
+        const  { proyecto } = req.body;
+        
+        // Si la tarea existe o no
+        let tarea = await Proyecto.findById(req.params.id);
+        if(!tarea) {
+            return res.status(404).json({msg: 'No existe esa tarea'});
+        }
+        
+        // Extraer proyecto
+        const existeProyecto = await Proyecto.findById(proyecto);
+        
+
+        // Revisar si el proyecto actual pertenece al usuario autenticado
+        if(existeProyecto.creador.toString() !== req.usuario.id ) {
+            return res.status(401).json({msg: 'No autorizado'});
+        }
+
+        // Eliminar
+        await Tarea.findByIdAndRemove({_id: req.params.id});
+        res.json({msg: 'Tarea Eliminada'})
+        
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).send('Hubo un error');
+    }
+}
